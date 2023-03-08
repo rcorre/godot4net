@@ -38,28 +38,24 @@ func _on_lobby_chat_update(lobby_id: int, steam_id: int, _making_change_id: int,
 	if lobby_id != _lobby_id:
 		prints("Lobby change notification for lobby %d (my lobby is %d)" % [lobby_id, _lobby_id])
 		return
-	var peer_id := _convert_steam_to_peer_id(steam_id)
-	_steam_id_to_peer_id[steam_id] = peer_id
-	_peer_id_to_steam_id[peer_id] = steam_id
 	match chat_state:
 		Steam.CHAT_MEMBER_STATE_CHANGE_ENTERED:
+			var peer_id := _add_peer(steam_id)
 			emit_signal("peer_connected", peer_id)
-		Steam.CHAT_MEMBER_STATE_CHANGE_DISCONNECTED:
-			emit_signal("peer_disconnected", peer_id)
-		Steam.CHAT_MEMBER_STATE_CHANGE_LEFT:
-			emit_signal("peer_disconnected", peer_id)
-		Steam.CHAT_MEMBER_STATE_CHANGE_KICKED:
-			emit_signal("peer_disconnected", peer_id)
+		Steam.CHAT_MEMBER_STATE_CHANGE_DISCONNECTED, Steam.CHAT_MEMBER_STATE_CHANGE_LEFT, Steam.CHAT_MEMBER_STATE_CHANGE_KICKED:
+			var peer_id = _peer_id_to_steam_id.get(steam_id)
+			if peer_id != null:
+				_peer_id_to_steam_id.erase(peer_id)
+				_steam_id_to_peer_id.erase(steam_id)
+				emit_signal("peer_disconnected", peer_id)
 
-func _convert_steam_to_peer_id(steam_id: int) -> int:
+func _add_peer(steam_id: int) -> int:
 	# Assume the lobby owner is the host
-	if steam_id == Steam.getLobbyOwner(_lobby_id):
-		return TARGET_PEER_SERVER
-	# Steam IDs are uint64s, but godot peer IDs must be >0 and <2147483647 (positive int32)
-	# We add 2 to avoid assigning 1 to anyone who is not the host
-	# There is, of course, as small chance of a collision with this scheme
-	# A more clever implementation could have the server assign and distribute truly unique IDs
-	return 2 + (steam_id % 2147483647)
+	var peer_id := TARGET_PEER_SERVER if steam_id == Steam.getLobbyOwner(_lobby_id) else (2 + (steam_id % 2**32))
+	_steam_id_to_peer_id[steam_id] = peer_id
+	_peer_id_to_steam_id[peer_id] = steam_id
+	prints("Mapped steam ID", steam_id, "to peer ID", peer_id)
+	return peer_id
 
 func join_lobby(lobby_id: int):
 	_status = CONNECTION_CONNECTING
@@ -71,6 +67,7 @@ func join_lobby(lobby_id: int):
 		push_error("Failed to join steam lobby %d: %s" % [lobby_id, Steam.getAPICallFailureReason()])
 		return
 	_lobby_id = res[0]
+	_add_peer(Steam.getSteamID())
 	prints("My ID %d Lobby owner %d" % [Steam.getSteamID(), Steam.getLobbyOwner(lobby_id)])
 	_status = CONNECTION_CONNECTED
 	prints("Connected to steam lobby %d" % _lobby_id)
