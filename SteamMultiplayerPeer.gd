@@ -74,7 +74,7 @@ func join_lobby(lobby_id: int):
 	for i in Steam.getNumLobbyMembers(_lobby_id):
 		var steam_id := Steam.getLobbyMemberByIndex(_lobby_id, i)
 		if steam_id != Steam.getSteamID():
-			var peer_id: int = _steam_id_to_peer_id[steam_id]
+			var peer_id := _add_peer(steam_id)
 			emit_signal("peer_connected", peer_id)
 
 func _close() ->  void:
