@@ -11,5 +11,9 @@ config_version=5
 [application]
 
 config/name="example"
-config/features=PackedStringArray("4.1", "Forward Plus")
+config/features=PackedStringArray("4.0", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+SteamAPI="*res://SteamAPI.gd"
