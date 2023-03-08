@@ -93,7 +93,7 @@ func _get_max_packet_size() ->  int:
 	return 4096
 
 func _get_packet_peer() ->  int:
-	return _packets.front().size()
+	return _packets.front().sender
 
 func _get_packet_script() ->  PackedByteArray:
 	var data := _packets[0].data
