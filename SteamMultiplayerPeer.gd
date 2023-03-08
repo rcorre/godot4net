@@ -103,6 +103,9 @@ func _get_packet_script() ->  PackedByteArray:
 func _get_transfer_channel() ->  int:
 	return _transfer_channel
 
+func _get_packet_channel() ->  int:
+	return _transfer_channel
+
 func _get_transfer_mode() ->  TransferMode:
 	return _transfer_mode
 
