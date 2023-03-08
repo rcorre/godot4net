@@ -59,6 +59,7 @@ func _add_peer(steam_id: int) -> int:
 
 func join_lobby(lobby_id: int):
 	_status = CONNECTION_CONNECTING
+	_add_peer(Steam.getSteamID())
 	Steam.joinLobby(lobby_id)
 	# res: [lobby_id, permissions, locked, response]
 	var res: Array = await Steam.lobby_joined
@@ -67,7 +68,6 @@ func join_lobby(lobby_id: int):
 		push_error("Failed to join steam lobby %d: %s" % [lobby_id, Steam.getAPICallFailureReason()])
 		return
 	_lobby_id = res[0]
-	_add_peer(Steam.getSteamID())
 	prints("My ID %d Lobby owner %d" % [Steam.getSteamID(), Steam.getLobbyOwner(lobby_id)])
 	_status = CONNECTION_CONNECTED
 	prints("Connected to steam lobby %d" % _lobby_id)
@@ -122,7 +122,7 @@ func _poll() ->  void:
 			break
 		var packet := Packet.new()
 		var packet_info := Steam.readP2PPacket(size)
-		packet.peer_id = _steam_id_to_peer_id[packet_info.steam_id_remote]
+		packet.sender = _steam_id_to_peer_id[packet_info.steam_id_remote]
 		packet.data = packet_info.data
 		_packets.push_back(packet)
 
@@ -133,7 +133,7 @@ func _put_packet_script(p_buffer : PackedByteArray) ->  Error:
 			var steam_id := Steam.getLobbyMemberByIndex(_lobby_id, i)
 			Steam.sendP2PPacket(steam_id, p_buffer, mode)
 	else:
-		var steam_id: int = _steam_id_to_peer_id[_target_peer]
+		var steam_id: int = _peer_id_to_steam_id[_target_peer]
 		Steam.sendP2PPacket(steam_id, p_buffer, mode)
 
 	return OK

@@ -57,6 +57,9 @@ func _ready():
 
 	multiplayer.connect("peer_connected", func(id): prints(multiplayer.get_unique_id(), ": got connection from: ", id))
 	multiplayer.connect("peer_disconnected", func(id): prints(multiplayer.get_unique_id(), ": got disconnect from: ", id))
+	if not multiplayer.is_server():
+		await multiplayer.connected_to_server
+		rpc_id(1, "hello", "hello")
 
 	await get_tree().process_frame
 	get_tree().root.add_child(QuitHandler.new())
