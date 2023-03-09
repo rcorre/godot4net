@@ -11,7 +11,10 @@ var _lobby_id: int
 var _status: ConnectionStatus
 var _packets: Array[Packet]
 
+var _transfer_mode: TransferMode
+var _transfer_channel: int
 var _target_peer: int
+var _refuse_new_connections: bool
 
 var _steam_id_to_peer_id := {}
 var _peer_id_to_steam_id := {}
@@ -22,7 +25,7 @@ func _init() -> void:
 	Steam.connect("lobby_chat_update", Callable(self, "_on_lobby_chat_update"))
 
 func _on_p2p_session_request(id: int):
-	if is_refusing_new_connections():
+	if _refuse_new_connections:
 		prints("Refusing P2P session request from %d" % id)
 	else:
 		prints("Accepting P2P session request from %d" % id)
@@ -97,23 +100,20 @@ func _get_packet_script() ->  PackedByteArray:
 	_packets.pop_front()
 	return data
 
-# func _get_transfer_channel() ->  int:
-# 	return _transfer_channel
+func _get_transfer_channel() ->  int:
+	return _transfer_channel
 
 func _get_packet_channel() ->  int:
-	return 0
+	return _transfer_channel
 
-# func _get_transfer_mode() ->  TransferMode:
-# 	return _transfer_mode
-
-# func _get_packet_mode() ->  TransferMode:
-# 	return _transfer_mode
+func _get_transfer_mode() ->  TransferMode:
+	return _transfer_mode
 
 func _get_unique_id() ->  int:
 	return _steam_id_to_peer_id[Steam.getSteamID()]
 
-# func _is_refusing_new_connections() ->  bool:
-# 	return false
+func _is_refusing_new_connections() ->  bool:
+	return false
 
 func _is_server() ->  bool:
 	return Steam.getSteamID() == Steam.getLobbyOwner(_lobby_id)
@@ -130,7 +130,7 @@ func _poll() ->  void:
 		_packets.push_back(packet)
 
 func _put_packet_script(p_buffer : PackedByteArray) ->  Error:
-	var mode := Steam.P2P_SEND_RELIABLE if get_transfer_mode() == TRANSFER_MODE_RELIABLE else Steam.P2P_SEND_UNRELIABLE
+	var mode := Steam.P2P_SEND_RELIABLE if _transfer_mode == TRANSFER_MODE_RELIABLE else Steam.P2P_SEND_UNRELIABLE
 	if _target_peer == TARGET_PEER_BROADCAST:
 		for i in range(Steam.getNumLobbyMembers(_lobby_id)):
 			var steam_id := Steam.getLobbyMemberByIndex(_lobby_id, i)
@@ -141,14 +141,14 @@ func _put_packet_script(p_buffer : PackedByteArray) ->  Error:
 
 	return OK
 
-# func _set_refuse_new_connections(p_enable : bool) ->  void:
-# 	_refuse_new_connections = p_enable
+func _set_refuse_new_connections(p_enable : bool) ->  void:
+	_refuse_new_connections = p_enable
 
 func _set_target_peer(p_peer: int) ->  void:
 	_target_peer = p_peer
 
-# func _set_transfer_channel(p_channel: int) ->  void:
-# 	_transfer_channel = p_channel
+func _set_transfer_channel(p_channel: int) ->  void:
+	_transfer_channel = p_channel
 
-# func _set_transfer_mode(p_mode: TransferMode) -> void:
-# 	_transfer_mode = p_mode
+func _set_transfer_mode(p_mode: TransferMode) -> void:
+	_transfer_mode = p_mode
