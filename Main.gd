@@ -40,7 +40,7 @@ func _ready():
 	match args[1]:
 		"steam":
 			var lobby_id := await SteamAPI.find_or_create_lobby("RRC Test Lobby")
-			var peer := MultiplayerPeerSteam.new()
+			var peer := SteamMultiplayerPeer.new()
 			peer.join_lobby(lobby_id)
 			get_tree().get_multiplayer().set_multiplayer_peer(peer)
 		"host":
