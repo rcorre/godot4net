@@ -30,6 +30,17 @@ class QuitHandler:
 		if event and event.keycode == KEY_ESCAPE:
 			get_tree().quit()
 
+func _physics_process(_delta: float) -> void:
+	if Engine.get_physics_frames() % 60 != 0:
+		return
+
+	if multiplayer.is_server():
+		rpc("hello", "hello from server to everyone")
+	else:
+		await get_tree().physics_frame
+		prints("sending", "hello to server from client")
+		rpc_id(1, "hello", "hello to server from client")
+
 func _ready():
 	var args := OS.get_cmdline_args()
 	if len(args) < 2:
@@ -57,14 +68,6 @@ func _ready():
 
 	multiplayer.connect("peer_connected", func(id): prints(multiplayer.get_unique_id(), ": got connection from: ", id))
 	multiplayer.connect("peer_disconnected", func(id): prints(multiplayer.get_unique_id(), ": got disconnect from: ", id))
-	if not multiplayer.is_server():
-		await multiplayer.connected_to_server
-		prints("sending", "hello from server to client")
-		rpc_id(1, "hello", "hello from server to client")
-	else:
-		await multiplayer.connected_to_server
-		prints("sending", "hello to everyone from server")
-		rpc("hello", "hello to everyone from server")
 
 	await get_tree().process_frame
 	get_tree().root.add_child(QuitHandler.new())
