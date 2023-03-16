@@ -23,7 +23,7 @@ func join():
 @rpc("any_peer", "call_remote", "unreliable", 0) func hello0(idx: int):
 	prints(multiplayer.get_unique_id(), "hello0", idx)
 
-@rpc("any_peer", "call_remote", "unreliable", 1) func hello1(idx: int):
+@rpc("any_peer", "call_remote", "reliable", 1) func hello1(idx: int):
 	prints(multiplayer.get_unique_id(), "hello1", idx)
 
 class QuitHandler:
