@@ -20,8 +20,11 @@ func join():
 		return
 	get_tree().get_multiplayer().set_multiplayer_peer(peer)
 
-@rpc("any_peer") func hello(msg: String):
-	prints(multiplayer.get_unique_id(), "got", msg, "from", multiplayer.get_remote_sender_id())
+@rpc("any_peer", 0) func hello0(idx: int):
+	prints(multiplayer.get_unique_id(), "hello0", idx)
+
+@rpc("any_peer", 1) func hello1(idx: int):
+	prints(multiplayer.get_unique_id(), "hello1", idx)
 
 class QuitHandler:
 	extends Node
@@ -31,15 +34,17 @@ class QuitHandler:
 			get_tree().quit()
 
 func _physics_process(_delta: float) -> void:
-	if Engine.get_physics_frames() % 60 != 0:
+	if Engine.get_physics_frames() % 5 != 0:
 		return
 
+	var idx = Engine.get_physics_frames() / 5
+
 	if multiplayer.is_server():
-		rpc("hello", "hello from server to everyone")
+		rpc("hello0", idx)
+		rpc("hello1", idx)
 	else:
-		await get_tree().physics_frame
-		prints("sending", "hello to server from client")
-		rpc_id(1, "hello", "hello to server from client")
+		rpc_id(1, "hello0", idx)
+		rpc_id(1, "hello1", idx)
 
 func _ready():
 	var args := OS.get_cmdline_args()
